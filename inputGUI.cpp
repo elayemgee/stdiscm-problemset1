@@ -110,8 +110,8 @@ InputGUI::InputGUI(sf::Font& font, sf::RenderWindow& window) : window(window) {
     y2Text.setCharacterSize(16);
 
     x1Text.setPosition(10, 300);
-    x2Text.setPosition(10, 340);
-    y1Text.setPosition(10, 380);
+    y1Text.setPosition(10, 340);
+    x2Text.setPosition(10, 380);
     y2Text.setPosition(10, 420);
 
 
@@ -122,8 +122,8 @@ InputGUI::InputGUI(sf::Font& font, sf::RenderWindow& window) : window(window) {
     y2InputBox.setSize(sf::Vector2f(100, 20));
 
     x1InputBox.setPosition(120, 300);
-    x2InputBox.setPosition(120, 340);
-    y1InputBox.setPosition(120, 380);
+    y1InputBox.setPosition(120, 340);
+    x2InputBox.setPosition(120, 380);
     y2InputBox.setPosition(120, 420);
 
     //Wall Input Text
@@ -138,8 +138,8 @@ InputGUI::InputGUI(sf::Font& font, sf::RenderWindow& window) : window(window) {
     y2InputText.setCharacterSize(16);
 
     x1InputText.setPosition(130, 300);
-    x2InputText.setPosition(130, 340);
-    y1InputText.setPosition(130, 380);
+    y1InputText.setPosition(130, 340);
+    x2InputText.setPosition(130, 380);
     y2InputText.setPosition(130, 420);
 
     //Wall Submit
@@ -431,18 +431,18 @@ void InputGUI::render(sf::RenderWindow& window, float fps) {
     //Wall
     window.draw(wallTitle);
     window.draw(x1Text);
-    window.draw(x2Text);
     window.draw(y1Text);
+    window.draw(x2Text);
     window.draw(y2Text);
 
     window.draw(x1InputBox);
-    window.draw(x2InputBox);
     window.draw(y1InputBox);
+    window.draw(x2InputBox);
     window.draw(y2InputBox);
 
     window.draw(x1InputText);
-    window.draw(x2InputText);
     window.draw(y1InputText);
+    window.draw(x2InputText);
     window.draw(y2InputText);
 
     // Draw the cursor if the input box is active and the cursor is visible
@@ -466,14 +466,15 @@ void InputGUI::render(sf::RenderWindow& window, float fps) {
         cursor.setPosition(x1InputText.findCharacterPos(x1InputText.getString().getSize()).x, 300);
         window.draw(cursor);
     }
-    else if (isX2Active && isCursorVisible) {
-        cursor.setPosition(x2InputText.findCharacterPos(x2InputText.getString().getSize()).x, 340);
-        window.draw(cursor);
-    }
     else if (isY1Active && isCursorVisible) {
-        cursor.setPosition(y1InputText.findCharacterPos(y1InputText.getString().getSize()).x, 380);
+        cursor.setPosition(y1InputText.findCharacterPos(y1InputText.getString().getSize()).x, 340);
         window.draw(cursor);
     }
+    else if (isX2Active && isCursorVisible) {
+        cursor.setPosition(x2InputText.findCharacterPos(x2InputText.getString().getSize()).x, 380);
+        window.draw(cursor);
+    }
+    
     else if (isY2Active && isCursorVisible) {
         cursor.setPosition(y2InputText.findCharacterPos(y2InputText.getString().getSize()).x, 420);
         window.draw(cursor);
