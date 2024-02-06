@@ -133,7 +133,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="inputGUI.cpp" />
+    <ClCompile Include="inputGUI.hpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="particle.cpp" />
+    <ClCompile Include="particleCanvas.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="particle.hpp" />
+    <ClInclude Include="particleCanvas.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
