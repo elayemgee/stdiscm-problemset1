@@ -182,6 +182,7 @@ int main() {
     float cAngle = 0.f;
     float xStart = 0.f;
     float yStart = 0.f;
+    int n3 = 0;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -204,7 +205,7 @@ int main() {
         }
 
         ImGui::Begin("Menu");
-        ImGui::SetWindowFontScale(1.5f);
+        ImGui::SetWindowFontScale(1.2f);
         ImGui::Text("FPS: %d", fps);
         ImGui::NewLine();
         ImGui::StyleColorsLight();
@@ -236,11 +237,12 @@ int main() {
 
         // Case 1
         ImGui::NextColumn();
+
         // Inputs for the new row
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::Text("1. Add particles by batch:");
-        ImGui::InputInt("# Particles", &n1);
+        ImGui::InputInt("1_# Particles", &n1);
 
         ImGui::NewLine();
         ImGui::InputFloat("1_x0", &startx);
@@ -256,7 +258,7 @@ int main() {
         ImGui::InputFloat("1_y0", &starty);
         ImGui::InputFloat("1_y1", &endy);
         ImGui::InputFloat("cVelocity", &constantVel1);
-        if (ImGui::Button("Add Particles")) {
+        if (ImGui::Button("1_Add_Particles")) {
             float deltaX = (endx - startx) / n1;
             float deltaY = (endy - starty) / n1;
             float currentX = startx;
@@ -276,15 +278,20 @@ int main() {
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::Text("2. Add particles by batch:");
-        ImGui::InputInt("# of Particles", &n2);
+        ImGui::InputInt("2_# of Particles", &n2);
+        ImGui::NewLine();
+
         ImGui::InputFloat(":x0", &x0);
         ImGui::InputFloat("theta0", &startTheta);
         ImGui::InputFloat("2_Velocity", &constantVel2);
+
         ImGui::NextColumn();
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::NewLine();
+        ImGui::NewLine();
+
         ImGui::InputFloat(":y0", &y0);
         ImGui::InputFloat("theta1", &endTheta);
         if (ImGui::Button("Fan Out")) {
@@ -307,18 +314,39 @@ int main() {
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::Text("3. Add particles by batch:");
+        ImGui::InputInt("3_# of Particles", &n3);
+        ImGui::NewLine();
         ImGui::InputFloat("-x0", &xStart);
         ImGui::InputFloat("velocity0", &startVelocity);
         ImGui::InputFloat(":angle", &cAngle);
+
         ImGui::NextColumn();
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::NewLine();
+        ImGui::NewLine();
+        ImGui::NewLine();
+
+
         ImGui::InputFloat("-y0", &yStart);
         ImGui::InputFloat("velocity1", &endVelocity);
-        if (ImGui::Button("Add Particles")) {
-            //Wall wall(wx1, wy1, wx2, wy2);
-            //walls.push_back(wall);
+        if (ImGui::Button("3_Add_Particles")) {
+            // Calculate the velocity difference
+            float velocityDifference = endVelocity - startVelocity;
+
+            // Calculate the uniform increment in velocity for each particle
+            float velocityIncrement = velocityDifference / (n3 - 1);
+
+            // Add particles with uniformly distributed velocities
+            float currentVelocity = startVelocity;
+            for (int i = 0; i < n3; ++i) {
+                // Add particle with current velocity
+                Particle particle(xStart, yStart, currentVelocity, cAngle);
+                particles.push_back(particle);
+
+                // Increment velocity for next particle
+                currentVelocity += velocityIncrement;
+            }
         }
 
 
