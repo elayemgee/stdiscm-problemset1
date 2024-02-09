@@ -205,7 +205,7 @@ int main() {
         }
 
         ImGui::Begin("Menu");
-        ImGui::SetWindowFontScale(1.2f);
+        ImGui::SetWindowFontScale(1.3f);
         ImGui::Text("FPS: %d", fps);
         ImGui::NewLine();
         ImGui::StyleColorsLight();
