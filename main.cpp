@@ -5,6 +5,9 @@
 #include <cmath>
 #include <random>
 #include <iostream>
+#include <future>
+#include <thread>
+
 
 #define SIZE 8
 
@@ -116,6 +119,63 @@ sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall
 }
 
 
+
+void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& fpsClock) {
+    std::vector<std::future<void>> futures;
+
+    static int frameCount = 0;
+    static float fps = 0.0f;
+
+    // Start the clock to measure the frame time
+    sf::Clock deltaClock;
+
+    // Divide particles into chunks for parallel processing
+    int num_threads = std::thread::hardware_concurrency();
+    int chunk_size = (particles.size() + num_threads - 1) / num_threads;
+
+    std::cout << "Chunk size = " << chunk_size << "\n" << std::endl;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int start_index = i * chunk_size;
+        int end_index = std::min((i + 1) * chunk_size, static_cast<int>(particles.size()));
+
+        futures.push_back(std::async(std::launch::async, [=, &particles, &walls]() {
+            for (int j = start_index; j < end_index; ++j) {
+                Particle& particle = particles[j];
+                sf::Vector2f newVelocity = particle.velocity;
+                bool collideWithWall = false;
+
+                for (const auto& wall : walls) {
+                    sf::Vector2f collisionOffset = calculateCollisionOffset(particle, wall);
+                    if (collisionOffset != newVelocity) {
+                        newVelocity = collisionOffset;
+                        collideWithWall = true;
+                        break;
+                    }
+                }
+
+                particle.shape.move(newVelocity);
+                handleCollision(particle, { 1280, 720 }, collideWithWall);
+            }
+            }));
+
+        // Measure FPS
+        ++frameCount;
+        if (fpsClock.getElapsedTime().asSeconds() >= 1.0) {
+            fps = frameCount / fpsClock.restart().asSeconds();
+            frameCount = 0;
+            std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
+        }
+    }
+
+    // Wait for all futures to finish
+    for (auto& future : futures) {
+        future.get();
+    }
+}
+
+
+/*
 void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls) {
     for (auto& particle : particles) {
         sf::Vector2f newVelocity = particle.velocity;
@@ -133,7 +193,7 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
         particle.shape.move(newVelocity);
         handleCollision(particle, { 1280, 720 }, collideWithWall);
     }
-}
+}*/
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Bouncing Particles GUI");
@@ -207,6 +267,13 @@ int main() {
         ImGui::Begin("Menu");
         ImGui::SetWindowFontScale(1.3f);
         ImGui::Text("FPS: %d", fps);
+        ImGui::Text("Particle Count: %zu", particles.size()); // Display particle count
+
+        // Add a button to clear the canvas
+        if (ImGui::Button("Clear Canvas")) {
+            particles.clear(); // Clear the particles vector
+        }
+
         ImGui::NewLine();
         ImGui::StyleColorsLight();
 
@@ -327,7 +394,6 @@ int main() {
         ImGui::NewLine();
         ImGui::NewLine();
 
-
         ImGui::InputFloat("-y0", &yStart);
         ImGui::InputFloat("velocity1", &endVelocity);
         if (ImGui::Button("3_Add_Particles")) {
@@ -349,11 +415,11 @@ int main() {
             }
         }
 
-
         ImGui::End();
 
+        updateParticles(particles, walls, fpsClock);
 
-        updateParticles(particles, walls);
+        frameClock.restart();
 
         ++frameCount;
         window.clear();
