@@ -91,7 +91,7 @@ sf::Vector2f calculateRelativePos(const Particle& particle) {
 }
 
 
-sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall) {
+sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall, float delta) {
     sf::Vector2f particlePosition = calculateRelativePos(particle);
     sf::Vector2f projection = particlePosition + particle.velocity;
     sf::Vector2f p0 = wall.shape[0].position;
@@ -102,7 +102,7 @@ sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall
     float numerator2 = (projection.x - particlePosition.x) * (p0.y - particlePosition.y) - (projection.y - particlePosition.y) * (p0.x - particlePosition.x);
 
     if (determinant == 0) {
-        return particle.velocity;
+        return particle.velocity * delta;
     }
 
     float alpha = numerator1 / determinant;
@@ -115,26 +115,24 @@ sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall
         return sf::Vector2f(intersectionX, intersectionY) - particlePosition;
     }
 
-    return particle.velocity;
+    return particle.velocity * delta;
 }
 
 
 
-void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& fpsClock) {
+void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
     std::vector<std::future<void>> futures;
 
-    static int frameCount = 0;
-    static float fps = 0.0f;
-
-    // Start the clock to measure the frame time
-    sf::Clock deltaClock;
+    sf::Time elapsed_time = frameClock.getElapsedTime();
+    float delta = elapsed_time.asSeconds();
 
     // Divide particles into chunks for parallel processing
     int num_threads = std::thread::hardware_concurrency();
     int chunk_size = (particles.size() + num_threads - 1) / num_threads;
 
-    std::cout << "Chunk size = " << chunk_size << "\n" << std::endl;
+    //std::cout << "Chunk size = " << chunk_size << "\n" << std::endl;
 
+    //multiply velocity 
     for (int i = 0; i < num_threads; ++i) {
         int start_index = i * chunk_size;
         int end_index = std::min((i + 1) * chunk_size, static_cast<int>(particles.size()));
@@ -146,26 +144,17 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
                 bool collideWithWall = false;
 
                 for (const auto& wall : walls) {
-                    sf::Vector2f collisionOffset = calculateCollisionOffset(particle, wall);
+                    sf::Vector2f collisionOffset = calculateCollisionOffset(particle, wall, delta);
                     if (collisionOffset != newVelocity) {
                         newVelocity = collisionOffset;
                         collideWithWall = true;
                         break;
                     }
                 }
-
                 particle.shape.move(newVelocity);
                 handleCollision(particle, { 1280, 720 }, collideWithWall);
             }
             }));
-
-        // Measure FPS
-        ++frameCount;
-        if (fpsClock.getElapsedTime().asSeconds() >= 1.0) {
-            fps = frameCount / fpsClock.restart().asSeconds();
-            frameCount = 0;
-            std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
-        }
     }
 
     // Wait for all futures to finish
@@ -176,6 +165,7 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
 
 
 /*
+* Original Code without parallelization
 void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls) {
     for (auto& particle : particles) {
         sf::Vector2f newVelocity = particle.velocity;
@@ -251,11 +241,10 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
-
         ImGui::SFML::Update(window, sf::seconds(1.0f / 60.0f)); // Limit ImGui update to 60 FPS
 
         // Compute the frame rate
-        float frameRate = 1.0f / frameClock.restart().asSeconds();
+        //float frameRate = 1.0f / frameClock.restart().asSeconds();
 
         // Display FPS every 0.5 seconds
         if (fpsClock.getElapsedTime().asSeconds() >= 0.5) {
@@ -417,7 +406,7 @@ int main() {
 
         ImGui::End();
 
-        updateParticles(particles, walls, fpsClock);
+        updateParticles(particles, walls, frameClock);
 
         frameClock.restart();
 
