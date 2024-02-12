@@ -8,8 +8,10 @@
 #include <future>
 #include <thread>
 
-
 #define SIZE 8
+
+std::atomic<int> totalCollisions(0); // Atomic counter for total collisions
+
 
 class Wall {
 public:
@@ -51,49 +53,82 @@ private:
     float speed;
 };
 
-void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide) {
+void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
+    if (is_collide) {
+        particle.shape.move(-particle.velocity * delta);
+        particle.velocity = -particle.velocity; // Reflect velocity
+        totalCollisions.fetch_add(1, std::memory_order_relaxed); // Atomically increment collision counter
+    }
+    else {
+        sf::FloatRect bounds = particle.shape.getGlobalBounds();
+
+        if (bounds.left < 0 || bounds.left + bounds.width > windowSize.x) {
+            particle.velocity.x = -particle.velocity.x;
+            particle.shape.setPosition(std::max(0.f, std::min(bounds.left, static_cast<float>(windowSize.x - bounds.width))), bounds.top);
+        }
+
+        if (bounds.top < 0 || bounds.top + bounds.height > windowSize.y) {
+            particle.velocity.y = -particle.velocity.y;
+            particle.shape.setPosition(bounds.left, std::max(0.f, std::min(bounds.top, static_cast<float>(windowSize.y - bounds.height))));
+        }
+    }
+}
+
+
+/*
+void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
     sf::FloatRect bounds = particle.shape.getGlobalBounds();
 
     if (bounds.left < 0 || bounds.left + bounds.width > windowSize.x) {
         particle.velocity.x = -particle.velocity.x;
+        particle.shape.move(particle.velocity * delta);
     }
 
     if (bounds.top < 0 || bounds.top + bounds.height > windowSize.y) {
         particle.velocity.y = -particle.velocity.y;
+        particle.shape.move(particle.velocity * delta);
+
     }
 
     if (is_collide) {
+        particle.shape.move(-particle.velocity * delta);
         particle.velocity = -particle.velocity;
     }
 }
+*/
 
-sf::Vector2f calculateRelativePos(const Particle& particle) {
-    sf::FloatRect bounds = particle.shape.getGlobalBounds();
 
-    float relative_x;
-    float relative_y;
-
-    if (particle.velocity.x > 0) {
-        relative_x = bounds.left + bounds.width;
+/*
+//modified
+void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
+    // Modify the particle's position to be just at the point of collision, rather than potentially inside the wall or past it
+    if (is_collide) {
+        // Adjust particle position to be just at the collision point - this may require some additional calculations
+        // For simplicity, here we just reverse the last movement
+        particle.shape.move(-particle.velocity * delta);
+        particle.velocity = -particle.velocity; // Reflect velocity
     }
     else {
-        relative_x = bounds.left;
-    }
+        // Handle wall collisions as before
+        sf::FloatRect bounds = particle.shape.getGlobalBounds();
 
-    if (particle.velocity.y > 0) {
-        relative_y = bounds.top + bounds.height;
-    }
-    else {
-        relative_y = bounds.top;
-    }
+        if (bounds.left < 0 || bounds.left + bounds.width > windowSize.x) {
+            particle.velocity.x = -particle.velocity.x;
+            particle.shape.setPosition(std::max(0.f, std::min(bounds.left, static_cast<float>(windowSize.x - bounds.width))), bounds.top);
+        }
 
-    return sf::Vector2f(relative_x, relative_y);
-}
-
+        if (bounds.top < 0 || bounds.top + bounds.height > windowSize.y) {
+            particle.velocity.y = -particle.velocity.y;
+            particle.shape.setPosition(bounds.left, std::max(0.f, std::min(bounds.top, static_cast<float>(windowSize.y - bounds.height))));
+        }
+    }
+}*/
 
 sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall, float delta) {
-    sf::Vector2f particlePosition = calculateRelativePos(particle);
-    sf::Vector2f projection = particlePosition + particle.velocity;
+    sf::Vector2f particlePosition = particle.shape.getPosition();
+    //sf::Vector2f particlePosition = calculateRelativePos(particle);
+    //calculateRelativePos(particle);
+    sf::Vector2f projection = particlePosition + particle.velocity * delta;
     sf::Vector2f p0 = wall.shape[0].position;
     sf::Vector2f p1 = wall.shape[1].position;
 
@@ -111,6 +146,10 @@ sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall
     if (alpha >= 0 && alpha <= 1 && beta >= 0 && beta <= 1) {
         float intersectionX = particlePosition.x + alpha * (projection.x - particlePosition.x);
         float intersectionY = particlePosition.y + alpha * (projection.y - particlePosition.y);
+
+        sf::Vector2f calculation = sf::Vector2f(intersectionX, intersectionY) - particlePosition;
+
+        //std::cout << "calculation = " << calculation.x << ", " << calculation.y << std::endl;
 
         return sf::Vector2f(intersectionX, intersectionY) - particlePosition;
     }
@@ -130,8 +169,6 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
     int num_threads = std::thread::hardware_concurrency();
     int chunk_size = (particles.size() + num_threads - 1) / num_threads;
 
-    //std::cout << "Chunk size = " << chunk_size << "\n" << std::endl;
-
     //multiply velocity 
     for (int i = 0; i < num_threads; ++i) {
         int start_index = i * chunk_size;
@@ -140,7 +177,7 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
         futures.push_back(std::async(std::launch::async, [=, &particles, &walls]() {
             for (int j = start_index; j < end_index; ++j) {
                 Particle& particle = particles[j];
-                sf::Vector2f newVelocity = particle.velocity;
+                sf::Vector2f newVelocity = particle.velocity * delta;
                 bool collideWithWall = false;
 
                 for (const auto& wall : walls) {
@@ -151,8 +188,10 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
                         break;
                     }
                 }
+                //std::cout << "collideWithWall = " << collideWithWall << std::endl;
+                //std::cout << "newVelocity = " << newVelocity.x << ", " << newVelocity.y << std::endl;
                 particle.shape.move(newVelocity);
-                handleCollision(particle, { 1280, 720 }, collideWithWall);
+                handleCollision(particle, { 1280, 720 }, collideWithWall, delta);
             }
             }));
     }
@@ -165,25 +204,29 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
 
 
 /*
-* Original Code without parallelization
-void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls) {
+//* single thread
+void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
+    sf::Time elapsed_time = frameClock.getElapsedTime();
+    float delta = elapsed_time.asSeconds();
+
     for (auto& particle : particles) {
-        sf::Vector2f newVelocity = particle.velocity;
+        sf::Vector2f newVelocity = particle.velocity * delta;
         bool collideWithWall = false;
 
         for (const auto& wall : walls) {
-            sf::Vector2f collisionOffset = calculateCollisionOffset(particle, wall);
+            sf::Vector2f collisionOffset = calculateCollisionOffset(particle, wall, delta);
             if (collisionOffset != newVelocity) {
                 newVelocity = collisionOffset;
                 collideWithWall = true;
                 break;
             }
         }
-
         particle.shape.move(newVelocity);
-        handleCollision(particle, { 1280, 720 }, collideWithWall);
+        handleCollision(particle, { 1280, 720 }, collideWithWall, delta);
     }
-}*/
+}
+*/
+
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Bouncing Particles GUI");
@@ -234,6 +277,7 @@ int main() {
     float yStart = 0.f;
     int n3 = 0;
 
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -250,7 +294,7 @@ int main() {
         if (fpsClock.getElapsedTime().asSeconds() >= 0.5) {
             fps = frameCount / fpsClock.restart().asSeconds();
             frameCount = 0;
-            std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
+            //std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
         }
 
         ImGui::Begin("Menu");
@@ -261,6 +305,23 @@ int main() {
         // Add a button to clear the canvas
         if (ImGui::Button("Clear Canvas")) {
             particles.clear(); // Clear the particles vector
+            walls.clear();
+        }
+
+        // Add some spacing between buttons
+        ImGui::SameLine();
+
+        // New "Clear Particles Only" button
+        if (ImGui::Button("Clear Particles Only")) {
+            particles.clear(); // Clear only the particles vector
+        }
+
+        // Add some spacing between buttons
+        ImGui::SameLine();
+
+        // New "Clear Walls Only" button
+        if (ImGui::Button("Clear Walls Only")) {
+            walls.clear(); // Clear only the walls vector
         }
 
         ImGui::NewLine();
@@ -350,7 +411,7 @@ int main() {
 
         ImGui::InputFloat(":y0", &y0);
         ImGui::InputFloat("theta1", &endTheta);
-        if (ImGui::Button("Fan Out")) {
+        if (ImGui::Button("2_Add_Particles")) {
             float deltaTheta = (endTheta - startTheta) / n2;
             float currentTheta = startTheta;
             for (int i = 0; i < n2; ++i) {
