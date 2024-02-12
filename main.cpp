@@ -416,8 +416,19 @@ int main() {
         //invert y-axis
         window.setView(sf::View(sf::FloatRect(0.f, 720.f, 1280.f, -720.f)));
 
-        for (const auto& particle : particles) {
+        /*for (const auto& particle : particles) {
             window.draw(particle.shape);
+        }
+
+        for (const auto& wall : walls) {
+            window.draw(wall.shape);
+        }*/
+
+        // Use OpenMP to parallelize the rendering of particles
+        #pragma omp parallel for
+        for (int i = 0; i < particles.size(); ++i) {
+            // Each thread renders a portion of particles
+            window.draw(particles[i].shape);
         }
 
         for (const auto& wall : walls) {
