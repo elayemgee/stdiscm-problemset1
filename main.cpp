@@ -10,7 +10,7 @@
 
 #define SIZE 8
 
-std::atomic<int> totalCollisions(0); // Atomic counter for total collisions
+std::atomic<int> totalCollisions(0); 
 
 class Wall {
 public:
@@ -73,59 +73,9 @@ void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is
     }
 }
 
-/*
-void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
-    sf::FloatRect bounds = particle.shape.getGlobalBounds();
-
-    if (bounds.left < 0 || bounds.left + bounds.width > windowSize.x) {
-        particle.velocity.x = -particle.velocity.x;
-        particle.shape.move(particle.velocity * delta);
-    }
-
-    if (bounds.top < 0 || bounds.top + bounds.height > windowSize.y) {
-        particle.velocity.y = -particle.velocity.y;
-        particle.shape.move(particle.velocity * delta);
-
-    }
-
-    if (is_collide) {
-        particle.shape.move(-particle.velocity * delta);
-        particle.velocity = -particle.velocity;
-    }
-}
-*/
-
-
-/*
-//modified
-void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
-    // Modify the particle's position to be just at the point of collision, rather than potentially inside the wall or past it
-    if (is_collide) {
-        // Adjust particle position to be just at the collision point - this may require some additional calculations
-        // For simplicity, here we just reverse the last movement
-        particle.shape.move(-particle.velocity * delta);
-        particle.velocity = -particle.velocity; // Reflect velocity
-    }
-    else {
-        // Handle wall collisions as before
-        sf::FloatRect bounds = particle.shape.getGlobalBounds();
-
-        if (bounds.left < 0 || bounds.left + bounds.width > windowSize.x) {
-            particle.velocity.x = -particle.velocity.x;
-            particle.shape.setPosition(std::max(0.f, std::min(bounds.left, static_cast<float>(windowSize.x - bounds.width))), bounds.top);
-        }
-
-        if (bounds.top < 0 || bounds.top + bounds.height > windowSize.y) {
-            particle.velocity.y = -particle.velocity.y;
-            particle.shape.setPosition(bounds.left, std::max(0.f, std::min(bounds.top, static_cast<float>(windowSize.y - bounds.height))));
-        }
-    }
-}*/
 
 sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall, float delta) {
     sf::Vector2f particlePosition = particle.shape.getPosition();
-    //sf::Vector2f particlePosition = calculateRelativePos(particle);
-    //calculateRelativePos(particle);
     sf::Vector2f projection = particlePosition + particle.velocity * delta;
     sf::Vector2f p0 = wall.shape[0].position;
     sf::Vector2f p1 = wall.shape[1].position;
@@ -284,8 +234,6 @@ int main() {
         }
         ImGui::SFML::Update(window, sf::seconds(1.0f / 60.0f)); // Limit ImGui update to 60 FPS
 
-        // Compute the frame rate
-        //float frameRate = 1.0f / frameClock.restart().asSeconds();
 
         // Display FPS every 0.5 seconds
         if (fpsClock.getElapsedTime().asSeconds() >= 0.5) {
@@ -299,24 +247,19 @@ int main() {
         ImGui::Text("FPS: %d", fps);
         ImGui::Text("Particle Count: %zu", particles.size()); // Display particle count
 
-        // Add a button to clear the canvas
         if (ImGui::Button("Clear Canvas")) {
-            particles.clear(); // Clear the particles vector
+            particles.clear();
             walls.clear();
         }
 
-        // Add some spacing between buttons
         ImGui::SameLine();
 
-        // New "Clear Particles Only" button
         if (ImGui::Button("Clear Particles Only")) {
             particles.clear(); // Clear only the particles vector
         }
 
-        // Add some spacing between buttons
         ImGui::SameLine();
 
-        // New "Clear Walls Only" button
         if (ImGui::Button("Clear Walls Only")) {
             walls.clear(); // Clear only the walls vector
         }
@@ -355,7 +298,8 @@ int main() {
         // Inputs for the new row
         ImGui::NewLine();
         ImGui::NewLine();
-        ImGui::Text("1. Add particles by batch:");
+        //ImGui::Text("1. Add particles by batch:");
+        ImGui::Text("1.Uniform Distance (points):");
         ImGui::InputInt("1_# Particles", &n1);
 
         ImGui::NewLine();
@@ -391,7 +335,8 @@ int main() {
         // Inputs for the new row
         ImGui::NewLine();
         ImGui::NewLine();
-        ImGui::Text("2. Add particles by batch:");
+        //ImGui::Text("2. Add particles by batch:");
+        ImGui::Text("2.Uniform Distance (angle):");
         ImGui::InputInt("2_# of Particles", &n2);
         ImGui::NewLine();
 
@@ -427,7 +372,8 @@ int main() {
         // Inputs for the new row
         ImGui::NewLine();
         ImGui::NewLine();
-        ImGui::Text("3. Add particles by batch:");
+        //ImGui::Text("3. Add particles by batch:");
+        ImGui::Text("3.Uniform Difference (velocities):");
         ImGui::InputInt("3_# of Particles", &n3);
         ImGui::NewLine();
         ImGui::InputFloat("::x0", &xStart);
