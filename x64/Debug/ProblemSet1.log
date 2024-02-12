@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\laure\source\repos\ProblemSet1\main.cpp(42,28): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\laure\source\repos\ProblemSet1\main.cpp(131,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\laure\source\repos\ProblemSet1\main.cpp(252,30): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  ProblemSet1.vcxproj -> C:\Users\laure\source\repos\ProblemSet1\x64\Debug\ProblemSet1.exe
