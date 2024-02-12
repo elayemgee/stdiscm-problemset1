@@ -121,18 +121,19 @@ sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall
 
 
 void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
-    std::vector<std::future<void>> futures;
-
     sf::Time elapsed_time = frameClock.getElapsedTime();
     float delta = elapsed_time.asSeconds();
 
-    // Divide particles into chunks for parallel processing
     int num_threads = std::thread::hardware_concurrency();
     int chunk_size = (particles.size() + num_threads - 1) / num_threads;
 
+<<<<<<< Updated upstream
     //std::cout << "Chunk size = " << chunk_size << "\n" << std::endl;
 
     //multiply velocity 
+=======
+    std::vector<std::future<void>> futures;
+>>>>>>> Stashed changes
     for (int i = 0; i < num_threads; ++i) {
         int start_index = i * chunk_size;
         int end_index = std::min((i + 1) * chunk_size, static_cast<int>(particles.size()));
@@ -151,6 +152,10 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
                         break;
                     }
                 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
                 particle.shape.move(newVelocity);
                 handleCollision(particle, { 1280, 720 }, collideWithWall);
             }
@@ -162,6 +167,7 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
         future.get();
     }
 }
+
 
 
 /*
