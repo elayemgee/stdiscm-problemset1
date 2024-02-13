@@ -10,7 +10,7 @@
 
 #define SIZE 8
 
-std::atomic<int> totalCollisions(0); 
+//std::atomic<int> totalCollisions(0); 
 
 class Wall {
 public:
@@ -56,9 +56,9 @@ void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is
     if (is_collide) {
         particle.shape.move(-particle.velocity * delta);
         particle.velocity = -particle.velocity; // Reflect velocity
-        totalCollisions.fetch_add(1, std::memory_order_relaxed); // Atomically increment collision counter
+       // totalCollisions.fetch_add(1, std::memory_order_relaxed); // Atomically increment collision counter
     }
-    else {
+   // else {
         sf::FloatRect bounds = particle.shape.getGlobalBounds();
 
         if (bounds.left < 0 || bounds.left + bounds.width > windowSize.x) {
@@ -70,7 +70,7 @@ void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is
             particle.velocity.y = -particle.velocity.y;
             particle.shape.setPosition(bounds.left, std::max(0.f, std::min(bounds.top, static_cast<float>(windowSize.y - bounds.height))));
         }
-    }
+   // }
 }
 
 
@@ -307,8 +307,8 @@ int main() {
         ImGui::InputInt("1_# Particles", &n1);
 
         ImGui::NewLine();
-        ImGui::InputFloat("1_x0", &startx);
-        ImGui::InputFloat("1_x1", &endx);
+        ImGui::InputFloat("Start x", &startx);
+        ImGui::InputFloat("End x", &endx);
         ImGui::InputFloat("cAngle", &constantAngle1);
 
         ImGui::NextColumn();
@@ -317,8 +317,8 @@ int main() {
         ImGui::NewLine();
         ImGui::NewLine();
         ImGui::NewLine();
-        ImGui::InputFloat("1_y0", &starty);
-        ImGui::InputFloat("1_y1", &endy);
+        ImGui::InputFloat("Start y", &starty);
+        ImGui::InputFloat("End y", &endy);
         ImGui::InputFloat("cVelocity", &constantVel1);
         if (ImGui::Button("1_Add_Particles")) {
             float deltaX = (endx - startx) / n1;
@@ -344,9 +344,9 @@ int main() {
         ImGui::InputInt("2_# of Particles", &n2);
         ImGui::NewLine();
 
-        ImGui::InputFloat(":x0", &x0);
-        ImGui::InputFloat("theta0", &startTheta);
-        ImGui::InputFloat("2_Velocity", &constantVel2);
+        ImGui::InputFloat("Start x0", &x0);
+        ImGui::InputFloat("Start theta0", &startTheta);
+        ImGui::InputFloat(" cVelocity", &constantVel2);
 
         ImGui::NextColumn();
         ImGui::NewLine();
@@ -355,8 +355,8 @@ int main() {
         ImGui::NewLine();
         ImGui::NewLine();
 
-        ImGui::InputFloat(":y0", &y0);
-        ImGui::InputFloat("theta1", &endTheta);
+        ImGui::InputFloat("Start y0", &y0);
+        ImGui::InputFloat("End theta1", &endTheta);
         if (ImGui::Button("2_Add_Particles")) {
             float deltaTheta = (endTheta - startTheta) / n2;
             float currentTheta = startTheta;
@@ -380,9 +380,9 @@ int main() {
         ImGui::Text("3.Uniform Difference (velocities):");
         ImGui::InputInt("3_# of Particles", &n3);
         ImGui::NewLine();
-        ImGui::InputFloat("::x0", &xStart);
-        ImGui::InputFloat("velocity0", &startVelocity);
-        ImGui::InputFloat(":angle", &cAngle);
+        ImGui::InputFloat(" Start x0", &xStart);
+        ImGui::InputFloat(" Start Velocity", &startVelocity);
+        ImGui::InputFloat(" cAngle", &cAngle);
 
         ImGui::NextColumn();
         ImGui::NewLine();
@@ -391,8 +391,8 @@ int main() {
         ImGui::NewLine();
         ImGui::NewLine();
 
-        ImGui::InputFloat("::y0", &yStart);
-        ImGui::InputFloat("velocity1", &endVelocity);
+        ImGui::InputFloat(" Start y0", &yStart);
+        ImGui::InputFloat(" End Velocity", &endVelocity);
         if (ImGui::Button("3_Add_Particles")) {
             // Calculate the velocity difference
             float velocityDifference = endVelocity - startVelocity;
