@@ -242,9 +242,13 @@ int main() {
             //std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
         }
 
+        ImGui::Begin("Frame Rate");
+        ImGui::Text("FPS: %d", fps);
+        ImGui::End();
+
         ImGui::Begin("Menu");
         ImGui::SetWindowFontScale(1.3f);
-        ImGui::Text("FPS: %d", fps);
+ 
         ImGui::Text("Particle Count: %zu", particles.size()); // Display particle count
 
         if (ImGui::Button("Clear Canvas")) {
