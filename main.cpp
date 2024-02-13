@@ -8,7 +8,7 @@
 #include <future>
 #include <thread>
 
-#define SIZE 8
+#define SIZE 4
 
 class Wall {
 public:
