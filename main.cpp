@@ -10,7 +10,7 @@
 
 #define SIZE 8
 
-std::atomic<int> totalCollisions(0); // Atomic counter for total collisions
+//std::atomic<int> totalCollisions(0); // Atomic counter for total collisions
 
 
 class Wall {
@@ -57,7 +57,7 @@ void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is
     if (is_collide) {
         particle.shape.move(-particle.velocity * delta);
         particle.velocity = -particle.velocity; // Reflect velocity
-        totalCollisions.fetch_add(1, std::memory_order_relaxed); // Atomically increment collision counter
+        //totalCollisions.fetch_add(1, std::memory_order_relaxed); // Atomically increment collision counter
     }
     else {
         sf::FloatRect bounds = particle.shape.getGlobalBounds();
@@ -297,9 +297,13 @@ int main() {
             //std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
         }
 
+        ImGui::Begin("Frame Rate");
+        ImGui::Text("FPS: %d", fps);
+        ImGui::End();
+
         ImGui::Begin("Menu");
         ImGui::SetWindowFontScale(1.3f);
-        ImGui::Text("FPS: %d", fps);
+        //ImGui::Text("FPS: %d", fps);
         ImGui::Text("Particle Count: %zu", particles.size()); // Display particle count
 
         // Add a button to clear the canvas
