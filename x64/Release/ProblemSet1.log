@@ -1,10 +1,10 @@
 ﻿  main.cpp
-C:\Users\laure\source\repos\ProblemSet1\main.cpp(43,28): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\laure\source\repos\ProblemSet1\main.cpp(167,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\laure\source\repos\ProblemSet1\main.cpp(292,30): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\laure\source\repos\ProblemSet1\main.cpp(41,28): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\laure\source\repos\ProblemSet1\main.cpp(114,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\laure\source\repos\ProblemSet1\main.cpp(236,30): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
   Generating code
-  1 of 2529 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  11 of 2527 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    23 functions had inline decision re-evaluated but remain unchanged
+    26 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   ProblemSet1.vcxproj -> C:\Users\laure\source\repos\ProblemSet1\x64\Release\ProblemSet1.exe

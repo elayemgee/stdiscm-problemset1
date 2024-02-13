@@ -10,8 +10,6 @@
 
 #define SIZE 8
 
-std::atomic<int> totalCollisions(0); 
-
 class Wall {
 public:
     Wall(float x1, float y1, float x2, float y2) : x1(x1), y1(y1), x2(x2), y2(y2), shape(sf::Lines, 2) {
@@ -54,9 +52,8 @@ private:
 
 void handleCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
     if (is_collide) {
-        particle.shape.move(-particle.velocity * delta);
         particle.velocity = -particle.velocity; // Reflect velocity
-        totalCollisions.fetch_add(1, std::memory_order_relaxed); // Atomically increment collision counter
+        particle.shape.move(particle.velocity * delta);
     }
     else {
         sf::FloatRect bounds = particle.shape.getGlobalBounds();
@@ -116,7 +113,6 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
     int num_threads = std::thread::hardware_concurrency();
     int chunk_size = (particles.size() + num_threads - 1) / num_threads;
 
-    //multiply velocity 
     for (int i = 0; i < num_threads; ++i) {
         int start_index = i * chunk_size;
         int end_index = std::min((i + 1) * chunk_size, static_cast<int>(particles.size()));
