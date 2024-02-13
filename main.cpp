@@ -238,10 +238,12 @@ int main() {
             //std::cout << "Frame Rate = " << fps << " FPS\n" << std::endl;
         }
 
+        ImGui::SetNextWindowBgAlpha(0.4f);
         ImGui::Begin("Frame Rate");
         ImGui::Text("FPS: %d", fps);
         ImGui::End();
 
+        ImGui::SetNextWindowBgAlpha(0.4f);
         ImGui::Begin("Menu");
         ImGui::SetWindowFontScale(1.3f);
  
@@ -265,7 +267,7 @@ int main() {
         }
 
         ImGui::NewLine();
-        ImGui::StyleColorsLight();
+        ImGui::StyleColorsClassic();
 
         ImGui::Columns(2, "Menu", false);
 
