@@ -104,12 +104,11 @@ sf::Vector2f calculateCollisionOffset(const Particle& particle, const Wall& wall
 
 
 void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
-    std::vector<std::future<void>> futures;
-
     sf::Time elapsed_time = frameClock.getElapsedTime();
     float delta = elapsed_time.asSeconds();
 
-    // Divide particles into chunks for parallel processing
+    std::vector<std::future<void>> futures;
+
     int num_threads = std::thread::hardware_concurrency();
     int chunk_size = (particles.size() + num_threads - 1) / num_threads;
 
@@ -131,8 +130,6 @@ void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& 
                         break;
                     }
                 }
-                //std::cout << "collideWithWall = " << collideWithWall << std::endl;
-                //std::cout << "newVelocity = " << newVelocity.x << ", " << newVelocity.y << std::endl;
                 particle.shape.move(newVelocity);
                 handleCollision(particle, { 1280, 720 }, collideWithWall, delta);
             }
@@ -179,7 +176,6 @@ int main() {
     std::vector<Particle> particles;
     std::vector<Wall> walls;
 
-    sf::Clock deltaClock;
     sf::Clock frameClock;  // Clock to measure frame time
     sf::Clock fpsClock;    // Clock to track FPS update interval
     int frameCount = 0;
