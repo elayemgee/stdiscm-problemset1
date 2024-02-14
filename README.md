@@ -1,10 +1,4 @@
-## Set up 
-### SFML
-- Download SFML through [SFML Library Download](https://www.sfml-dev.org/download.php)
-- Include the following dll files under the Release folder which can be located inside the x64 folder:
-  - sfml-graphics-2.dll
-  - sfml-system-2.dll
-  - sfml-window-2.dll
-
- ### IMGUI
- - Download IMGUI through [IMGUI Library Download]
+## To Run the Program
+- Clone this repository in Visual Studio
+- Open ProblemSet1.sln
+- Run the program in Release 
