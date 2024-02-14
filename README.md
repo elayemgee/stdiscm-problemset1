@@ -1,4 +1,4 @@
 ## To Run the Program
-- Clone this repository in Visual Studio
-- Open ProblemSet1.sln
-- Run the program in Release 
+1. Clone this repository in Visual Studio
+2. Open ProblemSet1.sln
+3. Run the program in Release 
