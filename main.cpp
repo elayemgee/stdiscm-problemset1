@@ -47,124 +47,9 @@ private:
     float speed;
 };
 
-void checkCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
-    if (is_collide) {
-        particle.velocity = -particle.velocity; // Reflect velocity
-        particle.shape.move(particle.velocity * delta);
-    }
-   // else {
-        sf::FloatRect bounds = particle.shape.getGlobalBounds();
-        float rightBound = bounds.left + bounds.width; 
-        float bottomBound = bounds.top + bounds.height; 
-
-        if (bounds.left < 0 || rightBound > windowSize.x) {
-            particle.velocity.x = -particle.velocity.x;
-            particle.shape.setPosition(std::max(0.f, std::min(bounds.left, static_cast<float>(windowSize.x - bounds.width))), bounds.top);
-        }
-
-        if (bounds.top < 0 || bottomBound > windowSize.y) {
-            particle.velocity.y = -particle.velocity.y;
-            particle.shape.setPosition(bounds.left, std::max(0.f, std::min(bounds.top, static_cast<float>(windowSize.y - bounds.height))));
-        }
-   // }
-}
-
-
-sf::Vector2f getIntersection(const Particle& particle, const Wall& wall, float delta) {
-    sf::Vector2f particlePosition = particle.shape.getPosition();
-    sf::Vector2f projection = particlePosition + particle.velocity * delta;
-    sf::Vector2f p0 = wall.shape[0].position;
-    sf::Vector2f p1 = wall.shape[1].position;
-
-    float determinant = (p1.x - p0.x) * (projection.y - particlePosition.y) - (p1.y - p0.y) * (projection.x - particlePosition.x);
-    float numerator1 = (p1.x - p0.x) * (p0.y - particlePosition.y) - (p1.y - p0.y) * (p0.x - particlePosition.x);
-    float numerator2 = (projection.x - particlePosition.x) * (p0.y - particlePosition.y) - (projection.y - particlePosition.y) * (p0.x - particlePosition.x);
-
-    if (determinant == 0) {
-        return particle.velocity * delta;
-    }
-
-    float alpha = numerator1 / determinant;
-    float beta = numerator2 / determinant;
-
-    if (alpha >= 0 && alpha <= 1 && beta >= 0 && beta <= 1) {
-        float intersectionX = particlePosition.x + alpha * (projection.x - particlePosition.x);
-        float intersectionY = particlePosition.y + alpha * (projection.y - particlePosition.y);
-
-        sf::Vector2f calculation = sf::Vector2f(intersectionX, intersectionY) - particlePosition;
-
-        //std::cout << "calculation = " << calculation.x << ", " << calculation.y << std::endl;
-
-        return sf::Vector2f(intersectionX, intersectionY) - particlePosition;
-    }
-
-    return particle.velocity * delta;
-}
-
-
-void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
-    sf::Time elapsed_time = frameClock.getElapsedTime();
-    float delta = elapsed_time.asSeconds();
-
-    std::vector<std::future<void>> futures;
-
-    int num_threads = std::thread::hardware_concurrency();
-    int chunk_size = (particles.size() + num_threads - 1) / num_threads;
-
-    for (int i = 0; i < num_threads; ++i) {
-        int start_index = i * chunk_size;
-        int end_index = std::min((i + 1) * chunk_size, static_cast<int>(particles.size()));
-
-        futures.push_back(std::async(std::launch::async, [=, &particles, &walls]() {
-            for (int j = start_index; j < end_index; ++j) {
-                Particle& particle = particles[j];
-                sf::Vector2f newVelocity = particle.velocity * delta;
-                bool collideWithWall = false;
-
-                for (const auto& wall : walls) {
-                    sf::Vector2f collisionOffset = getIntersection(particle, wall, delta);
-                    if (collisionOffset != newVelocity) {
-                        newVelocity = collisionOffset;
-                        collideWithWall = true;
-                        break;
-                    }
-                }
-                particle.shape.move(newVelocity);
-                checkCollision(particle, { 1280, 720 }, collideWithWall, delta);
-            }
-            }));
-    }
-
-    // Wait for all futures to finish
-    for (auto& future : futures) {
-        future.get();
-    }
-}
-
-
-/*
-//* single thread
-void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
-    sf::Time elapsed_time = frameClock.getElapsedTime();
-    float delta = elapsed_time.asSeconds();
-
-    for (auto& particle : particles) {
-        sf::Vector2f newVelocity = particle.velocity * delta;
-        bool collideWithWall = false;
-
-        for (const auto& wall : walls) {
-            sf::Vector2f collisionOffset = calculateCollisionOffset(particle, wall, delta);
-            if (collisionOffset != newVelocity) {
-                newVelocity = collisionOffset;
-                collideWithWall = true;
-                break;
-            }
-        }
-        particle.shape.move(newVelocity);
-        handleCollision(particle, { 1280, 720 }, collideWithWall, delta);
-    }
-}
-*/
+void checkCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta); 
+void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock); 
+sf::Vector2f getIntersection(const Particle& particle, const Wall& wall, float delta); 
 
 
 int main() {
@@ -432,3 +317,97 @@ int main() {
     ImGui::SFML::Shutdown();
     return 0;
 }
+
+void checkCollision(Particle& particle, const sf::Vector2u& windowSize, bool is_collide, float delta) {
+    if (is_collide) {
+        particle.velocity = -particle.velocity; // Reflect velocity
+        particle.shape.move(particle.velocity * delta);
+    }
+    // else {
+    sf::FloatRect bounds = particle.shape.getGlobalBounds();
+    float rightBound = bounds.left + bounds.width;
+    float bottomBound = bounds.top + bounds.height;
+
+    if (bounds.left < 0 || rightBound > windowSize.x) {
+        particle.velocity.x = -particle.velocity.x;
+        particle.shape.setPosition(std::max(0.f, std::min(bounds.left, static_cast<float>(windowSize.x - bounds.width))), bounds.top);
+    }
+
+    if (bounds.top < 0 || bottomBound > windowSize.y) {
+        particle.velocity.y = -particle.velocity.y;
+        particle.shape.setPosition(bounds.left, std::max(0.f, std::min(bounds.top, static_cast<float>(windowSize.y - bounds.height))));
+    }
+    // }
+}
+
+
+void updateParticles(std::vector<Particle>& particles, const std::vector<Wall>& walls, sf::Clock& frameClock) {
+    sf::Time elapsed_time = frameClock.getElapsedTime();
+    float delta = elapsed_time.asSeconds();
+
+    std::vector<std::future<void>> futures;
+
+    int num_threads = std::thread::hardware_concurrency();
+    int chunk_size = (particles.size() + num_threads - 1) / num_threads;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int start_index = i * chunk_size;
+        int end_index = std::min((i + 1) * chunk_size, static_cast<int>(particles.size()));
+
+        futures.push_back(std::async(std::launch::async, [=, &particles, &walls]() {
+            for (int j = start_index; j < end_index; ++j) {
+                Particle& particle = particles[j];
+                sf::Vector2f newVelocity = particle.velocity * delta;
+                bool collideWithWall = false;
+
+                for (const auto& wall : walls) {
+                    sf::Vector2f collisionOffset = getIntersection(particle, wall, delta);
+                    if (collisionOffset != newVelocity) {
+                        newVelocity = collisionOffset;
+                        collideWithWall = true;
+                        break;
+                    }
+                }
+                particle.shape.move(newVelocity);
+                checkCollision(particle, { 1280, 720 }, collideWithWall, delta);
+            }
+            }));
+    }
+
+    // Wait for all futures to finish
+    for (auto& future : futures) {
+        future.get();
+    }
+}
+
+sf::Vector2f getIntersection(const Particle& particle, const Wall& wall, float delta) {
+    sf::Vector2f particlePosition = particle.shape.getPosition();
+    sf::Vector2f projection = particlePosition + particle.velocity * delta;
+    sf::Vector2f p0 = wall.shape[0].position;
+    sf::Vector2f p1 = wall.shape[1].position;
+
+    float determinant = (p1.x - p0.x) * (projection.y - particlePosition.y) - (p1.y - p0.y) * (projection.x - particlePosition.x);
+    float numerator1 = (p1.x - p0.x) * (p0.y - particlePosition.y) - (p1.y - p0.y) * (p0.x - particlePosition.x);
+    float numerator2 = (projection.x - particlePosition.x) * (p0.y - particlePosition.y) - (projection.y - particlePosition.y) * (p0.x - particlePosition.x);
+
+    if (determinant == 0) {
+        return particle.velocity * delta;
+    }
+
+    float alpha = numerator1 / determinant;
+    float beta = numerator2 / determinant;
+
+    if (alpha >= 0 && alpha <= 1 && beta >= 0 && beta <= 1) {
+        float intersectionX = particlePosition.x + alpha * (projection.x - particlePosition.x);
+        float intersectionY = particlePosition.y + alpha * (projection.y - particlePosition.y);
+
+        sf::Vector2f calculation = sf::Vector2f(intersectionX, intersectionY) - particlePosition;
+
+        //std::cout << "calculation = " << calculation.x << ", " << calculation.y << std::endl;
+
+        return sf::Vector2f(intersectionX, intersectionY) - particlePosition;
+    }
+
+    return particle.velocity * delta;
+}
+
